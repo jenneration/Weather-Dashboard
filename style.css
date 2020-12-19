@@ -1,0 +1,21 @@
+.row-main-jg {
+  margin-top: 3rem;
+}
+
+.container {
+  background-color: grey;
+}
+
+.col-jg {
+  background-color: lightpink;
+  border: solid 1px grey;
+}
+
+/* City Row */
+#city-weather-jg {
+  height: 300px;
+}
+/* Five-day weather blocks */
+.col-five-jg {
+  height: 250px;
+}
