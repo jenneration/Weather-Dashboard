@@ -1,3 +1,16 @@
+* {
+  box-sizing: border-box;
+}
+
+nav {
+  padding: 10px;
+  background-color: #000;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
 .row-main-jg {
   margin-top: 3rem;
 }
@@ -7,7 +20,7 @@
 }
 
 .col-jg {
-  background-color: lightpink;
+  background-color: #d3d3d3;
   border: solid 1px grey;
 }
 
@@ -18,4 +31,42 @@
 /* Five-day weather blocks */
 .col-five-jg {
   height: 250px;
+}
+
+/* Search bar */
+.form-container {
+  margin: 16px 0;
+  padding: 10px 0;
+}
+
+.form-label {
+  margin-bottom: 5px;
+  display: block;
+}
+
+/* Search "buttons */
+
+.col-prev-jg {
+  padding: 10px;
+  border: solid 1px #000;
+  margin: 0 5px;
+}
+
+/* Wrap and Extend search button */
+@media screen and (max-width: 600px) {
+  #search-btn {
+    float: none;
+  }
+}
+
+/* No gutters to center 5 day div */
+.no-gutters {
+  margin-right: 0;
+  margin-left: 0;
+
+  > .col,
+  > [class*="col-"] {
+    padding-right: 0;
+    padding-left: 0;
+  }
 }
