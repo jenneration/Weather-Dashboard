@@ -1,228 +1,283 @@
-$(document).ready(function () {
-  console.log("I'm running too");
+$(document).ready(function() {
+    console.log("I'm running too");
+    //TODO: responsive, ensure no empty divs
+    //Variables
+    var lat;
+    var lon;
+    var city;
+    var currCity;
+    var currIcon;
+    var dayIconIn;
+    var currentDate;
+    var currDate;
+    var dDate;
+    var temp;
+    var humidity;
+    var wind;
+    var uvIndex;
+    var uvColor;
+    var name;
+    var apiKey = "ce88fbce1823777bbc3aa070ae9e6c27";
+    //Storage array
+    var storedCities = [];
 
-  //Variables
-  var lat;
-  var lon;
-  var city;
-  var currIcon;
-  var currIconIn;
-  var dayIcon;
-  var dayIconIn;
-  var currentDate;
-  var currDate;
-  var newDate;
-  var temp;
-  var humidity;
-  var wind;
-  var uvIndex;
-  var dayOne;
-  var dayTwo;
-  var dayThree;
-  var dayFour;
-  var dayFive;
-  //Page Elements
+    function displayMessage(type, message) {
+        $("#message").text(message);
+        $("#message").attr("class", type);
+    }
 
-  var weatherStats = [];
 
-  //Open Weather Key & URLs
-  var apiKey = "ce88fbce1823777bbc3aa070ae9e6c27";
-  var queryURL1 =
-    "https://api.openweathermap.org/data/2.5/weather?q=Boston&appid=" + apiKey; //Set to Boston
 
-  ////MOVED INTO function getWeather
 
-  $("#search-btn").on("click", function (event) {
-    event.preventDefault();
-    city = $("#search-input").val();
-    // console.log("I'm clicked");
-    // console.log(city);
+    //Click event#1 for input search
+    $("#search-btn").on("click", function(event) {
+        event.preventDefault();
 
-    getCity();
-    //pushInfo();//NOT WORKING
-  });
+        city = $("#search-input").val();
 
-  ////////////////////////////////////////////////////
+        //if no city entered, return
+        if (!$("#search-input").val()) {
+            return;
+        }
 
-  getCity(); //TEST
-  //CURRENT WEATHER - grabs city name
-  function getCity() {
-    // var queryURL1 =
-    //For button SUBMIT
-    // var queryURL1 =
-    //   "https://api.openweathermap.org/data/2.5/weather?q=" +
-    //   city +
-    //   "&appid=" +
-    //   apiKey;
-    $.ajax({
-      url: queryURL1,
-      method: "GET",
-    }).then(function (response) {
-      console.log("THIS IS MAIN WEATHER");
-      //console.log(queryURL1);
-      console.log(response);
-      // console.log(response.name);
+        // if ($("#search-input").val() === "") {
+        //     displayMessage("error", "Please enter a city");
+        // }
 
-      //Coordinates for following One-Call
-      lat = response.coord.lat;
-      lon = response.coord.lon;
-      dt = response.dt;
-      console.log(dt);
-      //PAGE ELEMENTS
-      //Current city being searched
-      city = response.name;
-      currIcon = response.weather[0].icon;
 
-      var divCity = $("<h2>");
-      divCity.text(city);
-
-      currIconIn = $("<img>").attr(
-        "src",
-        "http://openweathermap.org/img/wn/" + currIcon + "@2x.png"
-      );
-      $("#city-weather-jg").append(divCity, currIconIn);
-      // console.log(icon);
-
-      getOneCall();
+        cityToStore();
+        getCity();
     });
-  } //END getCity
 
-  //ONE CALL
-  function getOneCall() {
-    var queryURL2 =
-      "https://api.openweathermap.org/data/2.5/onecall?lat=" +
-      lat +
-      "&lon=" +
-      lon +
-      "&dt=" +
-      dt +
-      "&exclude=minutely,hourly&units=imperial&appid=" +
-      apiKey;
+    //Click event#2 for previous searches
+    $(".row-cities-jg").on("click", ".btn", initializeTwo);
 
-    $.ajax({
-      url: queryURL2,
-      method: "GET",
-    }).then(function (response) {
-      //Log the queryURL
-      console.log("THIS IS ONE CALL");
-      //console.log(queryURL2);
-      console.log(response);
+    function initializeTwo() {
+        city = $(this).text();
+        console.log(city);
+        cityToStore();
+        getCity();
+    }
 
-      //CURRENT weather stats
-      temp = response.current.temp;
-      console.log(temp);
-      humidity = humidity;
-      wind = response.current.wind_speed;
-      uvIndex = response.current.uvi;
+    //On load: get stored cities
+    getCities();
 
-      // //CURRENT CITY date
-      currentDate = new Date(response.current.dt * 1000); //DATE
+    //On load: render last searched city's current weather
+    // renderLastSearch();
+    function renderLastSearch() {
+        var getOneJSON = localStorage.getItem("storedCities[0].name");
+        if (getOneJSON !== null) {
+            storedCities[0].name = JSON.parse(getOneJSON);
+            console.log(storedCities[0].name);
+        }
 
-      //TODO: TIME SOLUTION?????
+    }
 
-      // var time = moment(timestamp).format("DD-MM-YYYY");
-      // console.log(time);
 
-      console.log(currentDate.toDateString()); //Mon Dec 21 2020 ----YES
-      console.log(currentDate);
-      var monthA = currentDate.toLocaleString("en-US", { month: "numeric" });
-      var dayB = currentDate.toLocaleString("en-US", { day: "numeric" });
-      var yearC = currentDate.toLocaleString("en-US", { year: "numeric" });
-      currDate = `(${monthA}/${dayB}/${yearC})`;
-      console.log(currDate);
+    //Render on page load: last search and previous cities searched
+    function getCities() {
+        var storedJSON = localStorage.getItem("storedCities");
+        //Parse if items exists in array
+        if (storedJSON !== null) {
+            storedCities = JSON.parse(storedJSON);
+            console.log(storedCities);
+            console.log(storedCities[0].city);
+            if (storedCities[0].city !== null) {
+                city = storedCities[0].city;
+                //Renders main search div
+                getCity();
+            }
+        }
 
-      /////////////////////
+        //Renders previously searched cities 
+        renderCities();
+    }
 
-      //FIVE-DAY STATS
-      //TODO: DATES!!!!!
-      // // Convert "dt:"
-      // var dayDate = new Date(response.daily[1].dt * 1000);
-      // var month = dayDate.toLocaleString("en-US", { month: "numeric" });
-      // var day = dayDate.toLocaleString("en-US", { day: "numeric" });
-      // var year = dayDate.toLocaleString("en-US", { year: "numeric" });
-      // formattedDate = `(${month}/${day}/${year})`;
+    //Renders previous cities searched
+    function renderCities() {
 
-      // //var string = (dayDate.toDateString()); //Mon Dec 21 2020 -- YES
-      // var month = dayDate.toLocaleString("en-US", { month: "numeric" });
-      // var day = dayDate.toLocaleString("en-US", { day: "numeric" });
-      // var year = dayDate.toLocaleString("en-US", { year: "numeric" });
-      // var formattedDate = `(${month}/${day}/${year})`;
+        //Limit saved searches to 10
+        storedCities.length = 10;
 
-      // newDate = $("<div>");
-      // newDate.text(formattedDate); //DATE
+        for (var i = 0; i < storedCities.length; i++) {
+            var storedDiv = $("<div>").text(storedCities[i].city);
+            storedDiv.addClass("btn box-jg");
+            storedDiv.attr("value", city);
+            //console.log(storedCities[i].city);
+            $(".row-cities-jg").append(storedDiv);
+        }
+    }
 
-      // // TODO: Create 5-day forecast section
-      // dTemp = response.daily[0].temp.day;
-      // dHumidity = response.daily[0].humidity;
-      // dayIcon = response.daily[0].weather[0].icon;
+    //Render current search in sidebar & push searches to array & localStorage
+    function cityToStore() {
 
-      //5-day Forecast
-      for (var i = 1; i <= 5; i++) {
-        var dayTwo = $("<div class='col col-sm'>");
+        //Add new search to start of array
+        name = { city };
+        console.log(city);
+        storedCities.unshift({ city });
 
-        dayIconIn = $("<img>").attr(
-          `src`,
-          `http://openweathermap.org/img/wn/${response.daily[i].weather[0].icon}@2x.png`
-        );
+        //Set new search to localStorage
+        localStorage.setItem("storedCities", JSON.stringify(storedCities));
+        console.log(storedCities);
 
-        var dayTemp = $("<div>");
-        dayTemp.text(`Temp: ${response.daily[i].temp.day} F`);
+        //Reset input
+        $("#search-input").val("");
+        $("#forecast").empty();
+        $(".row-cities-jg").empty();
+        getCities();
+    }
 
-        var dayHumidity = $("<div>");
-        dayHumidity.text(`Humidity: ${response.daily[i].humidity} %`);
+    ////////////////////////////////////////////////////END LOCAL NEW LOCATION
 
-        dayTwo.append(dayTemp, dayHumidity, dayIconIn);
-        $("#forecast").append(dayTwo);
-      }
+    //CURRENT WEATHER - grabs city name
+    function getCity() {
+        //Query for current to get city name and coordinates
+        var queryURL1 =
+            "https://api.openweathermap.org/data/2.5/weather?q=" +
+            city +
+            "&appid=" +
+            apiKey;
 
-      renderPage();
-    });
-  }
+        //AJAX current weather to get city coordinates
+        $.ajax({
+            url: queryURL1,
+            method: "GET",
+        }).then(function(response) {
+            console.log("THIS IS MAIN WEATHER");
+            console.log(response);
 
-  //////////////////////////////////Create current city weather div
-  function renderPage() {
-    //Main content
+            //Data from following One-Call
+            dt = response.dt;
+            currCity = response.name;
+            lat = response.coord.lat;
+            lon = response.coord.lon;
+            currIcon = response.weather[0].icon;
 
-    var divDate = $("<div>");
-    divDate.text(`${currDate}`);
+            //Reset 5-day forecast div before rendering new search info
+            ///////////////////////////////////////////////////////////////////
+            // $("#forecast").empty();
+            //Make Ajax call to second URL for remaining stats
+            getOneCall();
 
-    var divTemp = $("<div>");
-    divTemp.text(`Temperature: ${temp} F`);
+            //cityToStore();
+        });
+    }
 
-    var divHumidity = $("<div>");
-    divHumidity.text(`Humidity: ${humidity}%`);
+    //AJAX ONE CALL
+    function getOneCall() {
+        var queryURL2 =
+            "https://api.openweathermap.org/data/2.5/onecall?lat=" +
+            lat +
+            "&lon=" +
+            lon +
+            "&dt=" +
+            dt +
+            "&exclude=minutely,hourly&units=imperial&appid=" +
+            apiKey;
 
-    var divWind = $("<div>");
-    divWind.text(`Wind Speed: ${wind} MPH`);
+        $.ajax({
+            url: queryURL2,
+            method: "GET",
+        }).then(function(response) {
+            //Log the queryURL
+            console.log("THIS IS ONE CALL");
+            //console.log(queryURL2);
+            console.log(response);
 
-    var divUV = $("<div>");
-    divUV.text(`UV Index: ${uvIndex}`);
+            //CURRENT weather stats
+            temp = response.current.temp;
+            humidity = humidity;
+            wind = response.current.wind_speed;
+            uvIndex = response.current.uvi;
+            uvColor = Math.round(uvIndex);
+            console.log(uvColor);
 
-    $("#city-weather-jg").append(divDate, divTemp, divHumidity, divWind, divUV);
-  }
+            //CURRENT CITY date
+            currentDate = new Date(response.current.dt * 1000); //DATE
+            //Date conversion
+            console.log(currentDate.toDateString()); //Mon Dec 21 2020 ----YES
+            console.log(currentDate);
+            var monthA = currentDate.toLocaleString("en-US", { month: "numeric" });
+            var dayB = currentDate.toLocaleString("en-US", { day: "numeric" });
+            var yearC = currentDate.toLocaleString("en-US", { year: "numeric" });
+            currDate = `(${monthA}/${dayB}/${yearC})`;
+            console.log(currDate);
 
-  //Function to convert and format "dt:" date
+            /////////////////////
 
-  //////////
+            //5-day Forecast
+            $("#forecast").empty();
+            for (var i = 1; i <= 5; i++) {
+                // Convert "dt:"
+                dDate = new Date(response.daily[i].dt * 1000);
+                var month = dDate.toLocaleString("en-US", { month: "numeric" });
+                var day = dDate.toLocaleString("en-US", { day: "numeric" });
+                var year = dDate.toLocaleString("en-US", { year: "numeric" });
+                formattedDate = `${month}/${day}/${year}`;
+
+                dayIconIn = $("<img class='day-icon'>").attr(
+                    `src`,
+                    `http://openweathermap.org/img/wn/${response.daily[i].weather[0].icon}@2x.png`
+                );
+
+                var dayTwo = $("<div class='col col-five-jg'>");
+
+                var cardColumns = $("<card-column column>");
+
+                var divCard = $("<div class='card card-jg'>");
+
+                var divCardBody = $("<div class='card-body card-body-jg shadow p-3 mb-5 rounded'>");
+
+                var dayDate = $("<h6 class='row-city card-title'>");
+                dayDate.text(formattedDate);
+
+                var dayTemp = $("<p class='box card-text'>");
+                dayTemp.text(`Temp: ${response.daily[i].temp.day} F`);
+
+                var dayHumidity = $("<p class='box card-text'>");
+                dayHumidity.text(`Humidity: ${response.daily[i].humidity} %`);
+
+                divCardBody.append(dayDate, dayIconIn, dayTemp, dayHumidity);
+                divCard.append(divCardBody);
+                cardColumns.append(divCard);
+                dayTwo.append(cardColumns)
+                $("#forecast").append(dayTwo);
+            }
+
+            //Reset current city elements before loading new search elements
+            $("#city-weather-jg").empty();
+            currentCity();
+        });
+    }
+
+    //Render current search
+    function currentCity() {
+        //Main content
+        var currWrapper = $("<div class='curr-wrapper'>");
+        var divCity = $("<div class='htwo'>").html(`<span>${currCity}</span> ${currDate}`);
+        var currIconIn = $("<img class='img-main'>").attr("src", "http://openweathermap.org/img/wn/" + currIcon + "@2x.png");
+        var divTemp = $("<div class='curr'>").text(`Temperature: ${temp} F`);
+        var divHumidity = $("<div class='curr'>").text(`Humidity: ${humidity}%`);
+        var divWind = $("<div class='curr'>").text(`Wind Speed: ${wind} MPH`);
+        var divUV = $("<div class='curr divUV'>").text("UV Index: ")
+        var uv = $("<span class='uvi'>").text(`${uvIndex}`);
+        $(currWrapper).append(divCity, currIconIn, divTemp, divHumidity, divWind, divUV, uv);
+        $("#city-weather-jg").append(currWrapper);
+
+        //UV Color background
+        console.log(uvColor);
+        if (uvColor <= 2) {
+            uv.attr("class", "green uv");
+        } else if ((uvColor = 3 && uvColor <= 5)) {
+            uv.attr("class", "yellow uv");
+        } else if ((uvColor = 6 && uvColor <= 7)) {
+            uv.attr("class", "orange uv");
+        } else if ((uvColor = 8 && uvColor <= 10)) {
+            uv.attr("class", "red uv");
+        } else if (uvColor >= 11) {
+            uv.attr("class", "violet uv");
+        }
+
+
+    }
 });
-
-// var dayDate = new Date(response.daily[1].dt * 1000);
-// function convertDate(date) {
-//   var month = dayDate.toLocaleString("en-US", { month: "numeric" });
-//   var day = dayDate.toLocaleString("en-US", { day: "numeric" });
-//   var year = dayDate.toLocaleString("en-US", { year: "numeric" });
-//   var formattedDate = `(${month}/${day}/${year})`;
-//   console.log(formattedDate);
-// }
-
-//current weather stats
-// console.log(response.daily[0].dt); // current day
-// console.log(response.current.temp);
-// console.log(response.current.humidity);
-// console.log(response.current.wind_speed);
-// console.log(response.current.uvi);
-
-// cDate = Date.parse(currDate);
-// console.log(cDate);
-// console.log(currDate);
-// console.log(currentDate);
